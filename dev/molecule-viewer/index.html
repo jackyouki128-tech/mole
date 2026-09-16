@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D 분자 구조 뷰어 | Molecular Structure Explorer</title>
+  <meta name="description" content="주요 분자들의 3D 구조를 인터랙티브하게 탐색할 수 있는 과학 시각화 도구입니다. 물, 이산화탄소, 메테인 등 다양한 분자를 회전, 확대/축소하며 관찰하세요." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Background particles -->
+  <div class="bg-particles" id="bgParticles"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="8" fill="url(#atomGrad)" />
+            <ellipse cx="20" cy="20" rx="18" ry="7" stroke="url(#orbitGrad1)" stroke-width="1.5" fill="none" transform="rotate(0 20 20)"/>
+            <ellipse cx="20" cy="20" rx="18" ry="7" stroke="url(#orbitGrad2)" stroke-width="1.5" fill="none" transform="rotate(60 20 20)"/>
+            <ellipse cx="20" cy="20" rx="18" ry="7" stroke="url(#orbitGrad3)" stroke-width="1.5" fill="none" transform="rotate(120 20 20)"/>
+            <defs>
+              <radialGradient id="atomGrad" cx="40%" cy="35%">
+                <stop offset="0%" stop-color="#a78bfa"/>
+                <stop offset="100%" stop-color="#6d28d9"/>
+              </radialGradient>
+              <linearGradient id="orbitGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#818cf8" stop-opacity="0.2"/>
+                <stop offset="50%" stop-color="#818cf8" stop-opacity="1"/>
+                <stop offset="100%" stop-color="#818cf8" stop-opacity="0.2"/>
+              </linearGradient>
+              <linearGradient id="orbitGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#34d399" stop-opacity="0.2"/>
+                <stop offset="50%" stop-color="#34d399" stop-opacity="1"/>
+                <stop offset="100%" stop-color="#34d399" stop-opacity="0.2"/>
+              </linearGradient>
+              <linearGradient id="orbitGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#f472b6" stop-opacity="0.2"/>
+                <stop offset="50%" stop-color="#f472b6" stop-opacity="1"/>
+                <stop offset="100%" stop-color="#f472b6" stop-opacity="0.2"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>Molecular<span>Explorer</span></h1>
+          <p>3D 분자 구조 뷰어</p>
+        </div>
+      </div>
+      <div class="header-badge">
+        <span class="badge-dot"></span>
+        <span>실시간 3D 렌더링</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Left Panel: Controls -->
+      <aside class="control-panel" id="controlPanel">
+        <div class="panel-section">
+          <h2 class="section-title">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+            분자 선택
+          </h2>
+
+          <!-- Search Input -->
+          <div class="search-container">
+            <div class="search-wrapper">
+              <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+              </svg>
+              <input
+                type="text"
+                id="searchInput"
+                class="search-input"
+                placeholder="분자식 입력 (예: H₂O, CO₂)"
+                autocomplete="off"
+              />
+              <button class="search-clear" id="searchClear" title="지우기">×</button>
+            </div>
+            <div class="search-suggestions" id="searchSuggestions"></div>
+          </div>
+
+          <!-- Category Tabs -->
+          <div class="category-tabs" id="categoryTabs">
+            <button class="cat-tab active" data-cat="all">전체</button>
+            <button class="cat-tab" data-cat="inorganic">무기물</button>
+            <button class="cat-tab" data-cat="organic">유기물</button>
+            <button class="cat-tab" data-cat="biomolecule">생체분자</button>
+          </div>
+
+          <!-- Molecule Grid -->
+          <div class="molecule-grid" id="moleculeGrid"></div>
+        </div>
+
+        <!-- Display Options -->
+        <div class="panel-section">
+          <h2 class="section-title">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+            표시 옵션
+          </h2>
+          <div class="options-grid">
+            <div class="option-item">
+              <label class="option-label">표시 모드</label>
+              <div class="btn-group" id="displayMode">
+                <button class="mode-btn active" data-mode="ball-stick" title="공-막대 모델">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><line x1="12" y1="7" x2="4" y2="4" stroke="currentColor" stroke-width="2"/><line x1="12" y1="7" x2="20" y2="4" stroke="currentColor" stroke-width="2"/></svg>
+                  공-막대
+                </button>
+                <button class="mode-btn" data-mode="spacefill" title="공간채움 모델">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="14" r="7" opacity="0.7"/><circle cx="16" cy="10" r="6" opacity="0.8"/></svg>
+                  공간채움
+                </button>
+                <button class="mode-btn" data-mode="stick" title="막대 모델">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="6" y1="18" x2="12" y2="12"/><line x1="12" y1="12" x2="18" y2="6"/><line x1="12" y1="12" x2="6" y2="6"/></svg>
+                  막대
+                </button>
+              </div>
+            </div>
+
+            <div class="option-item">
+              <label class="option-label" for="bgColorPicker">배경색</label>
+              <div class="color-picker-row">
+                <div class="color-preset" data-color="#0a0a1a" style="background:#0a0a1a" title="우주 검정" id="bgPreset1"></div>
+                <div class="color-preset" data-color="#0d1b2a" style="background:#0d1b2a" title="심해 청색"></div>
+                <div class="color-preset" data-color="#1a0a2e" style="background:#1a0a2e" title="보라 암흑"></div>
+                <div class="color-preset" data-color="#1a1a2e" style="background:#1a1a2e" title="미드나잇"></div>
+                <div class="color-preset" data-color="#0f2027" style="background:#0f2027" title="정글 녹색"></div>
+                <input type="color" id="bgColorPicker" class="color-input" value="#0a0a1a" title="직접 선택" />
+              </div>
+            </div>
+
+            <div class="option-item toggle-row">
+              <label class="option-label">자동 회전</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="autoRotate" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="option-item toggle-row">
+              <label class="option-label">원소 레이블</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="showLabels" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="option-item toggle-row">
+              <label class="option-label">결합 하이라이트</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="showBonds" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="option-item">
+              <label class="option-label" for="atomScale">원자 크기</label>
+              <div class="slider-row">
+                <input type="range" id="atomScale" min="0.3" max="2.0" step="0.1" value="1.0" class="range-slider" />
+                <span class="slider-value" id="atomScaleValue">1.0×</span>
+              </div>
+            </div>
+
+            <div class="option-item">
+              <label class="option-label" for="rotateSpeed">회전 속도</label>
+              <div class="slider-row">
+                <input type="range" id="rotateSpeed" min="0.1" max="3.0" step="0.1" value="0.8" class="range-slider" />
+                <span class="slider-value" id="rotateSpeedValue">0.8×</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Help -->
+        <div class="panel-section controls-help">
+          <h2 class="section-title">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+            조작 방법
+          </h2>
+          <ul class="help-list">
+            <li><span class="kbd">드래그</span> 회전</li>
+            <li><span class="kbd">스크롤</span> 확대/축소</li>
+            <li><span class="kbd">우클릭+드래그</span> 이동</li>
+            <li><span class="kbd">더블클릭</span> 초기화</li>
+            <li><span class="kbd">터치</span> 핀치 줌 지원</li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- Right Panel: 3D Viewer -->
+      <section class="viewer-section">
+        <!-- Molecule Info Bar -->
+        <div class="molecule-info-bar" id="moleculeInfoBar">
+          <div class="info-formula" id="infoFormula">H₂O</div>
+          <div class="info-details">
+            <span class="info-name" id="infoName">물 (Water)</span>
+            <span class="info-separator">•</span>
+            <span class="info-atoms" id="infoAtoms">3 원자</span>
+            <span class="info-separator">•</span>
+            <span class="info-mw" id="infoMw">MW: 18.02 g/mol</span>
+          </div>
+          <div class="info-category" id="infoCategory">
+            <span class="category-badge inorganic">무기물</span>
+          </div>
+        </div>
+
+        <!-- 3D Canvas -->
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="moleculeCanvas"></canvas>
+
+          <!-- Loading Overlay -->
+          <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner">
+              <div class="spinner-ring"></div>
+              <div class="spinner-ring"></div>
+              <div class="spinner-ring"></div>
+            </div>
+            <p>분자 구조 로딩 중...</p>
+          </div>
+
+          <!-- Zoom Controls -->
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomIn" title="확대">+</button>
+            <button class="zoom-btn" id="zoomReset" title="초기화">⟳</button>
+            <button class="zoom-btn" id="zoomOut" title="축소">−</button>
+          </div>
+
+          <!-- Screenshot Button -->
+          <button class="screenshot-btn" id="screenshotBtn" title="스크린샷 저장">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+          </button>
+
+          <!-- Fullscreen Button -->
+          <button class="fullscreen-btn" id="fullscreenBtn" title="전체화면">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 110-2h4a1 1 0 011 1v4a1 1 0 11-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 112 0v1.586l2.293-2.293a1 1 0 011.414 1.414L6.414 15H8a1 1 0 110 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 110-2h1.586l-2.293-2.293a1 1 0 011.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+
+        <!-- Atom Legend -->
+        <div class="atom-legend" id="atomLegend"></div>
+      </section>
+    </main>
+
+    <!-- Info Panel (bottom) -->
+    <div class="info-panel" id="infoPanel">
+      <div class="info-panel-content">
+        <div class="molecule-description" id="moleculeDescription">
+          <h3 id="descTitle">물 (H₂O)</h3>
+          <p id="descText">물은 산소 원자 1개와 수소 원자 2개로 이루어진 분자로, 지구상의 생명체에게 필수적인 물질입니다. 굽은 형(bent) 구조를 가지며, H-O-H 결합각은 약 104.5°입니다. 극성 공유결합으로 이루어진 극성 분자이며, 수소결합을 형성하는 특성이 있습니다.</p>
+        </div>
+        <div class="molecule-properties">
+          <div class="prop-card" id="propBoiling">
+            <div class="prop-icon">🌡️</div>
+            <div class="prop-info">
+              <div class="prop-label">끓는점</div>
+              <div class="prop-value" id="propBoilingVal">100 °C</div>
+            </div>
+          </div>
+          <div class="prop-card" id="propMelting">
+            <div class="prop-icon">❄️</div>
+            <div class="prop-info">
+              <div class="prop-label">녹는점</div>
+              <div class="prop-value" id="propMeltingVal">0 °C</div>
+            </div>
+          </div>
+          <div class="prop-card" id="propShape">
+            <div class="prop-icon">📐</div>
+            <div class="prop-info">
+              <div class="prop-label">분자 형태</div>
+              <div class="prop-value" id="propShapeVal">굽은형 (Bent)</div>
+            </div>
+          </div>
+          <div class="prop-card" id="propPolarity">
+            <div class="prop-icon">⚡</div>
+            <div class="prop-info">
+              <div class="prop-label">극성</div>
+              <div class="prop-value" id="propPolarityVal">극성 분자</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="molecules.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
